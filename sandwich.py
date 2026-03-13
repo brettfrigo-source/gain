@@ -29,24 +29,74 @@ def make_sandwich(bread=None, protein=None, cheese=None, veggies=None, condiment
     return sandwich
 
 
+LAYER_ART = {
+    "bread_top": [
+        r"            _....----''''----...._",
+        r"        .-''    _.--''    ''--._   ''-.",
+        r"      .'    .-'    .--.  .--    '-.   '.",
+        r"     /   .-'    .-'   /  \   '-.   '-.  \\",
+        r"    /  .'    .-' .--./    \.--. '-.   '. \\",
+        r"   / .'   .-' .-'   /      \   '-. '-. '. \\",
+        r"  /.'  .-'  .'  _.-'        '-._  '.  '-.'\\",
+        r"  /.-'   .'  .-'                '-.  '.   '\\",
+        r" /    .-'_.-'                      '-._'-.  \\",
+        r" |--''--------.____          ____.--------''--|",
+    ],
+    "bread_bottom": [
+        r" |_.--------.____  ''------''  ____.--------._|",
+        r"  \''--..___     ''----------''     ___..--''/",
+        r"   ''--..__  ''----.......----''  __..--''",
+        r"           '''---...______...---'''",
+    ],
+    "protein": {
+        "turkey":          r" |~~turkey~~~~turkey~~~~turkey~~~~turkey~~|",
+        "ham":             r" |##ham######ham######ham######ham########|",
+        "roast beef":      r" |==roast=beef===roast=beef===roast=beef==|",
+        "grilled chicken": r" |//grilled//chicken//grilled//chicken////|",
+        "bacon":           r" |~~~~~~/\/\/\/\~bacon~/\/\/\/\~~~~~~~~~~~|",
+        "salami":          r" |@@salami@@@@salami@@@@salami@@@@salami@@|",
+    },
+    "cheese": {
+        "cheddar":     r" |::cheddar::::::::::::::::::::cheddar::::|",
+        "swiss":       r" |::swiss::():::():::():::():::swiss::::::|",
+        "provolone":   r" |::provolone:::::::::::::::::provolone:::|",
+        "pepper jack":  r" |::pepper*jack::*::*::*::*::pepper*jack::|",
+        "brie":        r" |::brie~~~~~~~~~~~~~~~~~~~~~~~~~~brie::::|",
+        "gouda":       r" |::gouda::::::::::::::::::::::::gouda::::|",
+    },
+    "veggie": {
+        "lettuce":   r" |~{{{lettuce}}}~{{{lettuce}}}~{{{~}}}}~~|",
+        "tomato":    r" |ooo(tomato)ooo(tomato)ooo(tomato)ooooooo|",
+        "onion":     r" |)))onion(((onion)))onion(((onion)))onion(|",
+        "pickles":   r" |==[pickles]==[pickles]==[pickles]===[]===|",
+        "jalapeños": r" |~~<jalapeño>~~<jalapeño>~~<jalapeño>~~<>~|",
+        "avocado":   r" |~~(avocado~~)(avocado~~)(avocado~~)(~~)~~|",
+        "spinach":   r" |~{{spinach}}~~{{spinach}}~~{{spinach}}~~~|",
+    },
+    "condiment": {
+        "mustard":   r" |....mustard.......mustard.......mustard..|",
+        "mayo":      r" |,,,,mayo,,,,,,,,,mayo,,,,,,,,,,mayo,,,,,,|",
+        "hot sauce":  r" |!!!!hot!sauce!!!!!hot!sauce!!!!hot!sauce!|",
+        "pesto":     r" |....pesto.......pesto........pesto.......|",
+        "olive oil":  r" |....olive.oil......olive.oil......oil....|",
+        "ranch":     r" |,,,,ranch,,,,,,,,,ranch,,,,,,,ranch,,,,,,|",
+    },
+}
+
+
 def display_sandwich(sandwich):
-    """Print a sandwich in a visually appealing way."""
-    w = 36
+    """Print a sandwich as a layered ASCII art cross-section."""
     print()
-    print("=" * w)
-    print(f"  {'~' * (w - 4)}  ")
-    print(f"  {sandwich['bread'].center(w - 4)}  ")
-    print(f"  {'~' * (w - 4)}  ")
+    for line in LAYER_ART["bread_top"]:
+        print(line)
     for condiment in sandwich["condiments"]:
-        print(f"  {condiment.center(w - 4)}  ")
-    print(f"  {sandwich['cheese'].center(w - 4)}  ")
-    print(f"  {sandwich['protein'].center(w - 4)}  ")
+        print(LAYER_ART["condiment"][condiment])
+    print(LAYER_ART["cheese"][sandwich["cheese"]])
+    print(LAYER_ART["protein"][sandwich["protein"]])
     for veggie in sandwich["veggies"]:
-        print(f"  {veggie.center(w - 4)}  ")
-    print(f"  {'~' * (w - 4)}  ")
-    print(f"  {sandwich['bread'].center(w - 4)}  ")
-    print(f"  {'~' * (w - 4)}  ")
-    print("=" * w)
+        print(LAYER_ART["veggie"][veggie])
+    for line in LAYER_ART["bread_bottom"]:
+        print(line)
     print()
 
 
