@@ -13,11 +13,11 @@ CONDIMENTS = ["mustard", "mayo", "hot sauce", "pesto", "olive oil", "ranch"]
 
 def make_sandwich(bread=None, protein=None, cheese=None, veggies=None, condiments=None):
     """Build a sandwich with the given ingredients, or pick random ones."""
-    bread = bread or random.choice(BREADS)
-    protein = protein or random.choice(PROTEINS)
-    cheese = cheese or random.choice(CHEESES)
-    veggies = veggies or random.sample(VEGGIES, k=random.randint(1, 3))
-    condiments = condiments or random.sample(CONDIMENTS, k=random.randint(1, 2))
+    bread = bread if bread is not None else random.choice(BREADS)
+    protein = protein if protein is not None else random.choice(PROTEINS)
+    cheese = cheese if cheese is not None else random.choice(CHEESES)
+    veggies = veggies if veggies is not None else random.sample(VEGGIES, k=random.randint(1, 3))
+    condiments = condiments if condiments is not None else random.sample(CONDIMENTS, k=random.randint(1, 2))
 
     sandwich = {
         "bread": bread,
