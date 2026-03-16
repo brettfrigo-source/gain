@@ -68,12 +68,16 @@ def install_dependencies():
     if not os.path.isfile(req_file):
         print("Warning: requirements.txt not found, skipping dependency install.")
         return
-    print("Installing Python dependencies...")
-    subprocess.run(
-        [sys.executable, "-m", "pip", "install", "-r", req_file],
-        check=True,
+    print("Installing Python dependencies (errors will be skipped)...")
+    result = subprocess.run(
+        [sys.executable, "-m", "pip", "install", "--ignore-installed", "-r", req_file],
     )
-    print("Dependencies installed.")
+    if result.returncode != 0:
+        print("Warning: Some dependencies failed to install. This may be due to")
+        print("Python version incompatibility. RVC officially supports Python 3.8-3.10.")
+        print("Continuing with model downloads...")
+    else:
+        print("Dependencies installed.")
 
 
 def download_file(url, dest):
