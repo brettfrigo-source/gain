@@ -4,44 +4,52 @@ import {
   Bar,
   XAxis,
   YAxis,
-  CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Legend,
 } from "recharts";
 
 interface DataPoint {
   name: string;
   budgeted: number;
   actual: number;
-  color: string;
 }
 
 export default function BudgetVsActualBar({ data }: { data: DataPoint[] }) {
   return (
-    <div className="h-72 overflow-x-auto">
+    <div className="h-64">
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} margin={{ top: 5, right: 5, left: 0, bottom: 30 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+        <BarChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 24 }} barGap={2}>
           <XAxis
             dataKey="name"
-            tick={{ fontSize: 11 }}
-            stroke="#94a3b8"
-            angle={-30}
+            axisLine={false}
+            tickLine={false}
+            tick={{ fontSize: 11, fill: "#a1a1a6" }}
+            angle={-35}
             textAnchor="end"
           />
-          <YAxis tick={{ fontSize: 12 }} stroke="#94a3b8" tickFormatter={(v) => `$${v}`} />
-          <Tooltip
-            formatter={(value: number) => [`$${value.toLocaleString()}`, ""]}
-            contentStyle={{
-              borderRadius: "8px",
-              border: "1px solid #e2e8f0",
-              fontSize: "13px",
-            }}
+          <YAxis
+            axisLine={false}
+            tickLine={false}
+            tick={{ fontSize: 12, fill: "#a1a1a6" }}
+            tickFormatter={(v) => `$${v}`}
+            width={48}
           />
-          <Legend wrapperStyle={{ fontSize: "12px" }} />
-          <Bar dataKey="budgeted" fill="#c7d2fe" radius={[4, 4, 0, 0]} />
-          <Bar dataKey="actual" fill="#6366f1" radius={[4, 4, 0, 0]} />
+          <Tooltip
+            formatter={(value: number, name: string) => [
+              `$${value.toLocaleString()}`,
+              name.charAt(0).toUpperCase() + name.slice(1),
+            ]}
+            contentStyle={{
+              borderRadius: "12px",
+              border: "none",
+              boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
+              fontSize: "13px",
+              padding: "12px 16px",
+            }}
+            cursor={{ fill: "rgba(0,0,0,0.02)" }}
+          />
+          <Bar dataKey="budgeted" fill="#e8e8ed" radius={[6, 6, 6, 6]} />
+          <Bar dataKey="actual" fill="#1d1d1f" radius={[6, 6, 6, 6]} />
         </BarChart>
       </ResponsiveContainer>
     </div>

@@ -18,7 +18,6 @@ export default function Dashboard() {
       name,
       income: calc.totalIncome(budget, i),
       expenses: calc.totalExpenses(budget, i),
-      net: calc.netSavings(budget, i),
     }));
   }, [budget]);
 
@@ -28,47 +27,57 @@ export default function Dashboard() {
         name: cat.name,
         value: calc.categorySpend(budget, cat.id, currentMonth),
         color: cat.color,
-        budget: cat.budgetedMonthly,
       }))
       .filter((d) => d.value > 0);
   }, [budget, currentMonth]);
 
   const budgetVsActual = useMemo(() => {
-    return budget.categories.map((cat) => ({
-      name: cat.name.length > 12 ? cat.name.slice(0, 12) + "..." : cat.name,
-      budgeted: cat.budgetedMonthly,
-      actual: calc.categorySpend(budget, cat.id, currentMonth),
-      color: cat.color,
-    }));
+    return budget.categories
+      .map((cat) => ({
+        name: cat.name.length > 10 ? cat.name.slice(0, 10) + "…" : cat.name,
+        budgeted: cat.budgetedMonthly,
+        actual: calc.categorySpend(budget, cat.id, currentMonth),
+      }))
+      .filter((d) => d.budgeted > 0 || d.actual > 0);
   }, [budget, currentMonth]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-16">
       <SummaryCards currentMonth={currentMonth} />
       <AlertsBanner currentMonth={currentMonth} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-xl border border-slate-200 p-5">
-          <h3 className="text-sm font-semibold text-slate-700 mb-4">Spending Trends</h3>
+      <section>
+        <h2 className="section-title mb-2">Spending trends</h2>
+        <p className="section-subtitle mb-8">Income and expenses across the year</p>
+        <div className="card">
           <SpendingTrendsChart data={monthlyData} />
         </div>
-        <div className="bg-white rounded-xl border border-slate-200 p-5">
-          <h3 className="text-sm font-semibold text-slate-700 mb-4">
-            Category Breakdown — {MONTH_SHORT[currentMonth]}
-          </h3>
-          {categoryData.length > 0 ? (
-            <CategoryPieChart data={categoryData} />
-          ) : (
-            <p className="text-slate-400 text-sm py-12 text-center">No expenses this month</p>
-          )}
-        </div>
-      </div>
+      </section>
 
-      <div className="bg-white rounded-xl border border-slate-200 p-5">
-        <h3 className="text-sm font-semibold text-slate-700 mb-4">
-          Budget vs Actual — {MONTH_SHORT[currentMonth]}
-        </h3>
-        <BudgetVsActualBar data={budgetVsActual} />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <section>
+          <h3 className="text-lg font-semibold tracking-tight mb-4" style={{ color: "var(--fg)" }}>
+            This month by category
+          </h3>
+          <div className="card">
+            {categoryData.length > 0 ? (
+              <CategoryPieChart data={categoryData} />
+            ) : (
+              <p className="text-center py-16" style={{ color: "var(--fg-tertiary)" }}>
+                No expenses this month
+              </p>
+            )}
+          </div>
+        </section>
+
+        <section>
+          <h3 className="text-lg font-semibold tracking-tight mb-4" style={{ color: "var(--fg)" }}>
+            Budget vs. actual
+          </h3>
+          <div className="card">
+            <BudgetVsActualBar data={budgetVsActual} />
+          </div>
+        </section>
       </div>
     </div>
   );

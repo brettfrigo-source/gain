@@ -3,20 +3,18 @@ import { useState, useMemo } from "react";
 import { useBudgetContext } from "@/hooks/useBudget";
 import { Scenario } from "@/types";
 import * as calc from "@/lib/calculations";
-import { MONTH_SHORT, generateId } from "@/lib/defaults";
+import { MONTH_SHORT } from "@/lib/defaults";
 import Modal from "../ui/Modal";
 import {
   LineChart,
   Line,
   XAxis,
   YAxis,
-  CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Legend,
 } from "recharts";
 
-const SCENARIO_COLORS = ["#f97316", "#8b5cf6", "#06b6d4", "#ec4899", "#84cc16"];
+const LINE_COLORS = ["#ff9f0a", "#af52de", "#00c7be", "#ff2d55", "#34c759"];
 
 export default function ForecastView() {
   const { budget, addScenario, updateScenario, deleteScenario } = useBudgetContext();
@@ -29,7 +27,7 @@ export default function ForecastView() {
   const [adjustments, setAdjustments] = useState<Record<string, string>>({});
 
   const baseline = useMemo(() => calc.monthlyForecast(budget, currentMonth), [budget, currentMonth]);
-  const eoyForecast = calc.forecastEndOfYear(budget, currentMonth);
+  const eoy = calc.forecastEndOfYear(budget, currentMonth);
 
   const scenarioForecasts = useMemo(() => {
     return budget.scenarios.map((s) => ({
@@ -40,8 +38,8 @@ export default function ForecastView() {
 
   const chartData = useMemo(() => {
     return MONTH_SHORT.map((name, i) => {
-      const point: Record<string, string | number> = { name, baseline: baseline[i] };
-      scenarioForecasts.forEach((sf, idx) => {
+      const point: Record<string, string | number> = { name, Baseline: baseline[i] };
+      scenarioForecasts.forEach((sf) => {
         point[sf.scenario.name] = sf.data[i];
       });
       return point;
@@ -73,158 +71,139 @@ export default function ForecastView() {
     const adj = Object.entries(adjustments)
       .filter(([_, v]) => v !== "" && v !== undefined)
       .map(([categoryId, v]) => ({ categoryId, newMonthlyAmount: parseFloat(v) || 0 }));
-    const data = {
-      name: sName.trim(),
-      description: sDesc.trim(),
-      incomeAdjustment: parseFloat(sIncome) || 0,
-      adjustments: adj,
-    };
+    const data = { name: sName.trim(), description: sDesc.trim(), incomeAdjustment: parseFloat(sIncome) || 0, adjustments: adj };
     if (editing) updateScenario({ ...editing, ...data });
     else addScenario(data);
     setShowForm(false);
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-lg font-semibold text-slate-900">Financial Forecast</h2>
-          <p className="text-sm text-slate-500">
-            End-of-year projection: <span className={eoyForecast >= 0 ? "text-emerald-600 font-medium" : "text-red-600 font-medium"}>{calc.formatCurrency(eoyForecast)}</span>
-          </p>
+    <div className="space-y-16">
+      <section>
+        <div className="flex items-end justify-between mb-2">
+          <h1 className="section-title">Forecast</h1>
+          <button onClick={() => openForm()} className="btn-primary">What-if scenario</button>
         </div>
-        <button
-          onClick={() => openForm()}
-          className="px-4 py-2 bg-indigo-500 text-white text-sm rounded-lg hover:bg-indigo-600"
-        >
-          + What-if Scenario
-        </button>
-      </div>
+        <p className="section-subtitle mb-10">
+          Projected year-end balance:{" "}
+          <span className="font-semibold" style={{ color: eoy >= 0 ? "var(--success)" : "var(--danger)" }}>
+            {calc.formatCurrency(eoy)}
+          </span>
+        </p>
 
-      {/* Forecast Chart */}
-      <div className="bg-white rounded-xl border border-slate-200 p-5">
-        <h3 className="text-sm font-semibold text-slate-700 mb-4">Cumulative Balance Forecast</h3>
-        <div className="h-72">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData} margin={{ top: 5, right: 5, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-              <XAxis dataKey="name" tick={{ fontSize: 12 }} stroke="#94a3b8" />
-              <YAxis tick={{ fontSize: 12 }} stroke="#94a3b8" tickFormatter={(v) => `$${v}`} />
-              <Tooltip
-                formatter={(value: number) => [`$${value.toLocaleString()}`, ""]}
-                contentStyle={{ borderRadius: "8px", border: "1px solid #e2e8f0", fontSize: "13px" }}
-              />
-              <Legend wrapperStyle={{ fontSize: "12px" }} />
-              <Line type="monotone" dataKey="baseline" stroke="#6366f1" strokeWidth={2} dot={false} />
-              {scenarioForecasts.map((sf, idx) => (
-                <Line
-                  key={sf.scenario.id}
-                  type="monotone"
-                  dataKey={sf.scenario.name}
-                  stroke={SCENARIO_COLORS[idx % SCENARIO_COLORS.length]}
-                  strokeWidth={2}
-                  strokeDasharray="5 5"
-                  dot={false}
+        <div className="card">
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#a1a1a6" }} dy={8} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#a1a1a6" }} tickFormatter={(v) => `$${(v / 1000).toFixed(v >= 1000 ? 1 : 0)}${v >= 1000 ? "k" : ""}`} width={48} />
+                <Tooltip
+                  formatter={(value: number) => [`$${value.toLocaleString()}`, ""]}
+                  contentStyle={{ borderRadius: "12px", border: "none", boxShadow: "0 4px 24px rgba(0,0,0,0.08)", fontSize: "13px", padding: "12px 16px" }}
+                  cursor={{ stroke: "#e8e8ed" }}
                 />
-              ))}
-            </LineChart>
-          </ResponsiveContainer>
+                <Line type="monotone" dataKey="Baseline" stroke="#1d1d1f" strokeWidth={2} dot={false} activeDot={{ r: 4, fill: "#1d1d1f", stroke: "#fff", strokeWidth: 2 }} />
+                {scenarioForecasts.map((sf, idx) => (
+                  <Line key={sf.scenario.id} type="monotone" dataKey={sf.scenario.name} stroke={LINE_COLORS[idx % LINE_COLORS.length]} strokeWidth={2} strokeDasharray="6 4" dot={false} />
+                ))}
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
         </div>
-      </div>
+      </section>
 
-      {/* Annual projection summary */}
-      <div className="bg-white rounded-xl border border-slate-200 p-5">
-        <h3 className="text-sm font-semibold text-slate-700 mb-3">Annual Projections</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="bg-indigo-50 rounded-lg p-4">
-            <p className="text-xs text-slate-500">Avg Monthly Income</p>
-            <p className="text-lg font-bold text-indigo-600">
-              {calc.formatCurrency(calc.averageMonthlyIncome(budget, currentMonth))}
-            </p>
-          </div>
-          <div className="bg-red-50 rounded-lg p-4">
-            <p className="text-xs text-slate-500">Avg Monthly Expenses</p>
-            <p className="text-lg font-bold text-red-500">
-              {calc.formatCurrency(calc.averageMonthlyExpenses(budget, currentMonth))}
-            </p>
-          </div>
-          <div className={`${eoyForecast >= 0 ? "bg-emerald-50" : "bg-red-50"} rounded-lg p-4`}>
-            <p className="text-xs text-slate-500">End-of-Year Estimate</p>
-            <p className={`text-lg font-bold ${eoyForecast >= 0 ? "text-emerald-600" : "text-red-600"}`}>
-              {calc.formatCurrency(eoyForecast)}
-            </p>
-          </div>
+      {/* Projections */}
+      <section>
+        <h2 className="text-lg font-semibold tracking-tight mb-6" style={{ color: "var(--fg)" }}>
+          Annual projections
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {[
+            { label: "Avg. monthly income", value: calc.averageMonthlyIncome(budget, currentMonth), color: "var(--fg)" },
+            { label: "Avg. monthly expenses", value: calc.averageMonthlyExpenses(budget, currentMonth), color: "var(--fg)" },
+            { label: "Year-end estimate", value: eoy, color: eoy >= 0 ? "var(--success)" : "var(--danger)" },
+          ].map((item) => (
+            <div key={item.label} className="card" style={{ background: "var(--bg-secondary)" }}>
+              <p className="text-xs font-medium uppercase tracking-wide mb-2" style={{ color: "var(--fg-tertiary)" }}>{item.label}</p>
+              <p className="text-2xl font-bold tracking-tight" style={{ color: item.color }}>{calc.formatCurrency(item.value)}</p>
+            </div>
+          ))}
         </div>
-      </div>
+      </section>
 
       {/* Scenarios list */}
       {budget.scenarios.length > 0 && (
-        <div className="bg-white rounded-xl border border-slate-200 p-5">
-          <h3 className="text-sm font-semibold text-slate-700 mb-3">Scenarios</h3>
-          <div className="space-y-3">
+        <section>
+          <h2 className="text-lg font-semibold tracking-tight mb-6" style={{ color: "var(--fg)" }}>
+            Scenarios
+          </h2>
+          <div className="space-y-1">
             {budget.scenarios.map((s, idx) => {
               const sData = scenarioForecasts[idx]?.data;
-              const eoy = sData ? sData[11] : 0;
+              const sEoy = sData ? sData[11] : 0;
               return (
-                <div key={s.id} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
+                <div key={s.id} className="flex items-center justify-between py-4 px-4 rounded-xl hover:bg-[var(--bg-secondary)] transition-colors duration-200 group">
                   <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: SCENARIO_COLORS[idx % SCENARIO_COLORS.length] }} />
+                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: LINE_COLORS[idx % LINE_COLORS.length] }} />
                     <div>
-                      <p className="text-sm font-medium text-slate-900">{s.name}</p>
-                      {s.description && <p className="text-xs text-slate-400">{s.description}</p>}
+                      <p className="text-sm font-medium" style={{ color: "var(--fg)" }}>{s.name}</p>
+                      {s.description && <p className="text-xs mt-0.5" style={{ color: "var(--fg-tertiary)" }}>{s.description}</p>}
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className={`text-sm font-semibold ${eoy >= 0 ? "text-emerald-600" : "text-red-600"}`}>
-                      EOY: {calc.formatCurrency(eoy)}
+                  <div className="flex items-center gap-4">
+                    <span className="text-sm font-semibold tabular-nums" style={{ color: sEoy >= 0 ? "var(--success)" : "var(--danger)" }}>
+                      {calc.formatCurrency(sEoy)}
                     </span>
-                    <button onClick={() => openForm(s)} className="text-xs text-indigo-500 hover:text-indigo-700">Edit</button>
-                    <button onClick={() => deleteScenario(s.id)} className="text-xs text-red-400 hover:text-red-600">Delete</button>
+                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      <button onClick={() => openForm(s)} className="btn-ghost text-xs px-2 py-1">Edit</button>
+                      <button onClick={() => deleteScenario(s.id)} className="btn-ghost text-xs px-2 py-1 hover:!text-[var(--danger)]">Remove</button>
+                    </div>
                   </div>
                 </div>
               );
             })}
           </div>
-        </div>
+        </section>
       )}
 
-      {/* Scenario Form Modal */}
-      <Modal open={showForm} onClose={() => setShowForm(false)} title={editing ? "Edit Scenario" : "Create What-if Scenario"}>
-        <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Scenario Form */}
+      <Modal open={showForm} onClose={() => setShowForm(false)} title={editing ? "Edit scenario" : "What-if scenario"}>
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Scenario Name</label>
-            <input type="text" value={sName} onChange={(e) => setSName(e.target.value)} placeholder="e.g., Lower income scenario" className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" autoFocus />
+            <label className="block text-xs font-medium mb-2" style={{ color: "var(--fg-secondary)" }}>Name</label>
+            <input type="text" value={sName} onChange={(e) => setSName(e.target.value)} placeholder="Lower income, cut spending, etc." className="input-field" autoFocus />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Description</label>
-            <input type="text" value={sDesc} onChange={(e) => setSDesc(e.target.value)} placeholder="Optional description" className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+            <label className="block text-xs font-medium mb-2" style={{ color: "var(--fg-secondary)" }}>Description</label>
+            <input type="text" value={sDesc} onChange={(e) => setSDesc(e.target.value)} placeholder="Optional" className="input-field" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Monthly Income Adjustment</label>
-            <input type="number" value={sIncome} onChange={(e) => setSIncome(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
-            <p className="text-xs text-slate-400 mt-1">Use negative for less income (e.g., -500)</p>
+            <label className="block text-xs font-medium mb-2" style={{ color: "var(--fg-secondary)" }}>Monthly income change</label>
+            <input type="number" value={sIncome} onChange={(e) => setSIncome(e.target.value)} className="input-field" />
+            <p className="text-xs mt-1.5" style={{ color: "var(--fg-tertiary)" }}>Negative for less income</p>
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Category Budget Overrides</label>
-            <div className="max-h-48 overflow-y-auto space-y-2">
+            <label className="block text-xs font-medium mb-3" style={{ color: "var(--fg-secondary)" }}>Category overrides</label>
+            <div className="max-h-52 overflow-y-auto space-y-2">
               {budget.categories.map((cat) => (
-                <div key={cat.id} className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: cat.color }} />
-                  <span className="text-xs text-slate-600 flex-1 truncate">{cat.name}</span>
+                <div key={cat.id} className="flex items-center gap-3">
+                  <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: cat.color }} />
+                  <span className="text-xs flex-1 truncate" style={{ color: "var(--fg-secondary)" }}>{cat.name}</span>
                   <input
                     type="number"
                     placeholder={cat.budgetedMonthly.toString()}
                     value={adjustments[cat.id] ?? ""}
                     onChange={(e) => setAdjustments((prev) => ({ ...prev, [cat.id]: e.target.value }))}
-                    className="w-24 px-2 py-1 border border-slate-300 rounded text-xs text-right focus:ring-2 focus:ring-indigo-500 outline-none"
+                    className="w-24 px-3 py-2 text-xs text-right rounded-lg outline-none transition-all duration-200"
+                    style={{ background: "var(--bg-secondary)", border: "1.5px solid transparent", color: "var(--fg)" }}
+                    onFocus={(e) => { e.target.style.borderColor = "var(--accent)"; }}
+                    onBlur={(e) => { e.target.style.borderColor = "transparent"; }}
                   />
                 </div>
               ))}
             </div>
           </div>
-          <button type="submit" className="w-full py-2 bg-indigo-500 text-white rounded-lg text-sm font-medium hover:bg-indigo-600">
-            {editing ? "Update" : "Create"} Scenario
-          </button>
+          <button type="submit" className="btn-primary w-full mt-2">{editing ? "Save changes" : "Create scenario"}</button>
         </form>
       </Modal>
     </div>

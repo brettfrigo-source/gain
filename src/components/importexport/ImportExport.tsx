@@ -2,7 +2,6 @@
 import { useState, useRef } from "react";
 import { useBudgetContext } from "@/hooks/useBudget";
 import { exportExpensesCsv, importExpensesCsv, downloadCsv } from "@/lib/csv";
-import * as calc from "@/lib/calculations";
 
 export default function ImportExport() {
   const { budget, addExpenses } = useBudgetContext();
@@ -15,15 +14,14 @@ export default function ImportExport() {
   };
 
   const handleExportSummary = () => {
-    const rows = budget.months.map((m, i) => ({
-      month: calc.getCategoryName([], "") || ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][i],
-      income: calc.totalIncome(budget, i).toFixed(2),
-      expenses: calc.totalExpenses(budget, i).toFixed(2),
-      net: calc.netSavings(budget, i).toFixed(2),
-    }));
+    const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
     const header = "month,income,expenses,net";
-    const body = rows.map(r => `${r.month},${r.income},${r.expenses},${r.net}`).join("\n");
-    downloadCsv(`${header}\n${body}`, `gain-summary-${budget.year}.csv`);
+    const rows = budget.months.map((_, i) => {
+      const inc = budget.months[i].incomes.reduce((s, x) => s + x.amount, 0);
+      const exp = budget.months[i].expenses.reduce((s, x) => s + x.amount, 0);
+      return `${months[i]},${inc.toFixed(2)},${exp.toFixed(2)},${(inc - exp).toFixed(2)}`;
+    });
+    downloadCsv(`${header}\n${rows.join("\n")}`, `gain-summary-${budget.year}.csv`);
   };
 
   const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -35,13 +33,13 @@ export default function ImportExport() {
       const { expenses, unmatchedCategories } = importExpensesCsv(text, budget);
       if (expenses.length > 0) {
         addExpenses(expenses);
-        let msg = `Imported ${expenses.length} expense(s)`;
+        let msg = `${expenses.length} expense${expenses.length > 1 ? "s" : ""} imported`;
         if (unmatchedCategories.length > 0) {
-          msg += `. Unmatched categories: ${unmatchedCategories.join(", ")} (assigned to last category)`;
+          msg += `. Unmatched: ${unmatchedCategories.join(", ")}`;
         }
         setImportStatus(msg);
       } else {
-        setImportStatus("No valid expenses found in file");
+        setImportStatus("No valid expenses found");
       }
     };
     reader.readAsText(file);
@@ -52,86 +50,72 @@ export default function ImportExport() {
   const totalIncomes = budget.months.reduce((s, m) => s + m.incomes.length, 0);
 
   return (
-    <div className="space-y-6 max-w-2xl">
-      <h2 className="text-lg font-semibold text-slate-900">Import & Export</h2>
-
-      {/* Data summary */}
-      <div className="bg-white rounded-xl border border-slate-200 p-5">
-        <h3 className="text-sm font-semibold text-slate-700 mb-3">Current Data ({budget.year})</h3>
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div>
-            <span className="text-slate-500">Total income entries:</span>{" "}
-            <span className="font-medium">{totalIncomes}</span>
-          </div>
-          <div>
-            <span className="text-slate-500">Total expense entries:</span>{" "}
-            <span className="font-medium">{totalExpenses}</span>
-          </div>
-          <div>
-            <span className="text-slate-500">Categories:</span>{" "}
-            <span className="font-medium">{budget.categories.length}</span>
-          </div>
-          <div>
-            <span className="text-slate-500">Savings goals:</span>{" "}
-            <span className="font-medium">{budget.savingsGoals.length}</span>
-          </div>
-        </div>
+    <div className="max-w-xl space-y-16">
+      <div>
+        <h1 className="section-title mb-2">Data</h1>
+        <p className="section-subtitle">Import and export your {budget.year} budget.</p>
       </div>
+
+      {/* Summary */}
+      <section className="card" style={{ background: "var(--bg-secondary)" }}>
+        <div className="grid grid-cols-2 gap-6">
+          {[
+            { label: "Income entries", value: totalIncomes },
+            { label: "Expense entries", value: totalExpenses },
+            { label: "Categories", value: budget.categories.length },
+            { label: "Savings goals", value: budget.savingsGoals.length },
+          ].map((item) => (
+            <div key={item.label}>
+              <p className="text-xs" style={{ color: "var(--fg-tertiary)" }}>{item.label}</p>
+              <p className="text-lg font-semibold mt-0.5" style={{ color: "var(--fg)" }}>{item.value}</p>
+            </div>
+          ))}
+        </div>
+      </section>
 
       {/* Export */}
-      <div className="bg-white rounded-xl border border-slate-200 p-5">
-        <h3 className="text-sm font-semibold text-slate-700 mb-3">Export Data</h3>
-        <p className="text-sm text-slate-500 mb-4">Download your budget data as CSV files.</p>
-        <div className="flex flex-wrap gap-3">
-          <button
-            onClick={handleExport}
-            className="px-4 py-2 bg-indigo-500 text-white text-sm rounded-lg hover:bg-indigo-600"
-          >
-            Export Expenses (CSV)
-          </button>
-          <button
-            onClick={handleExportSummary}
-            className="px-4 py-2 bg-slate-100 text-slate-700 text-sm rounded-lg hover:bg-slate-200 border border-slate-200"
-          >
-            Export Monthly Summary (CSV)
-          </button>
+      <section>
+        <h2 className="text-lg font-semibold tracking-tight mb-2" style={{ color: "var(--fg)" }}>Export</h2>
+        <p className="text-sm mb-6" style={{ color: "var(--fg-secondary)" }}>Download your data as CSV.</p>
+        <div className="flex gap-3">
+          <button onClick={handleExport} className="btn-primary">Export expenses</button>
+          <button onClick={handleExportSummary} className="btn-secondary">Export summary</button>
         </div>
-      </div>
+      </section>
 
       {/* Import */}
-      <div className="bg-white rounded-xl border border-slate-200 p-5">
-        <h3 className="text-sm font-semibold text-slate-700 mb-3">Import Expenses</h3>
-        <p className="text-sm text-slate-500 mb-2">
-          Upload a CSV file with columns: <code className="text-xs bg-slate-100 px-1 rounded">date, category, description, amount, recurring</code>
+      <section>
+        <h2 className="text-lg font-semibold tracking-tight mb-2" style={{ color: "var(--fg)" }}>Import</h2>
+        <p className="text-sm mb-6" style={{ color: "var(--fg-secondary)" }}>
+          Upload a CSV with columns: date, category, description, amount, recurring
         </p>
-        <p className="text-xs text-slate-400 mb-4">
-          Category names are matched to existing categories (case-insensitive). Unmatched categories will be assigned to the last category.
-        </p>
-        <input
-          ref={fileRef}
-          type="file"
-          accept=".csv"
-          onChange={handleImport}
-          className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
-        />
+        <label className="block cursor-pointer">
+          <div
+            className="card text-center py-10 transition-all duration-200 hover:shadow-lg hover:shadow-black/[0.03]"
+            style={{ border: "1.5px dashed var(--border)" }}
+          >
+            <p className="text-sm font-medium" style={{ color: "var(--accent)" }}>Choose file</p>
+            <p className="text-xs mt-1" style={{ color: "var(--fg-tertiary)" }}>CSV files only</p>
+          </div>
+          <input ref={fileRef} type="file" accept=".csv" onChange={handleImport} className="hidden" />
+        </label>
         {importStatus && (
-          <p className="mt-3 text-sm text-indigo-600 bg-indigo-50 px-3 py-2 rounded-lg">
+          <p className="mt-4 text-sm font-medium px-4 py-3 rounded-xl" style={{ background: "rgba(0,113,227,0.06)", color: "var(--accent)" }}>
             {importStatus}
           </p>
         )}
-      </div>
+      </section>
 
-      {/* CSV Template */}
-      <div className="bg-white rounded-xl border border-slate-200 p-5">
-        <h3 className="text-sm font-semibold text-slate-700 mb-3">CSV Template</h3>
-        <pre className="text-xs bg-slate-50 p-3 rounded-lg overflow-x-auto text-slate-600">
+      {/* Template */}
+      <section>
+        <h2 className="text-lg font-semibold tracking-tight mb-4" style={{ color: "var(--fg)" }}>CSV template</h2>
+        <pre className="text-xs leading-relaxed p-5 rounded-xl overflow-x-auto" style={{ background: "var(--bg-secondary)", color: "var(--fg-secondary)" }}>
 {`date,category,description,amount,recurring
 2026-01-15,Groceries,Weekly groceries,120.50,no
 2026-01-01,Rent/Housing,Monthly rent,1500,yes
-2026-01-10,Entertainment,Movie tickets,35,no
-2026-01-05,Subscriptions,Netflix,15.99,yes`}
+2026-01-10,Entertainment,Movie tickets,35,no`}
         </pre>
-      </div>
+      </section>
     </div>
   );
 }

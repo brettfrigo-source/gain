@@ -5,29 +5,28 @@ export default function Header() {
   const { year, setYear } = useBudgetContext();
 
   return (
-    <header className="bg-white border-b border-slate-200 sticky top-0 z-30">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center">
-            <span className="text-white font-bold text-sm">G</span>
-          </div>
-          <h1 className="text-xl font-bold text-slate-900">Gain</h1>
-        </div>
-        <div className="flex items-center gap-2">
+    <header className="sticky top-0 z-30 backdrop-blur-xl bg-[rgba(251,251,253,0.8)]">
+      <div className="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
+        <span className="text-lg font-semibold tracking-tight" style={{ color: "var(--fg)" }}>
+          Gain
+        </span>
+        <div className="flex items-center gap-1">
           <button
             onClick={() => setYear(year - 1)}
-            className="px-2 py-1 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded"
+            className="w-8 h-8 flex items-center justify-center rounded-full transition-colors duration-200 hover:bg-[var(--bg-secondary)]"
+            style={{ color: "var(--fg-secondary)" }}
           >
-            &larr;
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8L10 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </button>
-          <span className="text-lg font-semibold text-slate-900 min-w-[4rem] text-center">
+          <span className="text-sm font-semibold min-w-[3.5rem] text-center" style={{ color: "var(--fg)" }}>
             {year}
           </span>
           <button
             onClick={() => setYear(year + 1)}
-            className="px-2 py-1 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded"
+            className="w-8 h-8 flex items-center justify-center rounded-full transition-colors duration-200 hover:bg-[var(--bg-secondary)]"
+            style={{ color: "var(--fg-secondary)" }}
           >
-            &rarr;
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4L10 8L6 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </button>
         </div>
       </div>

@@ -2,35 +2,116 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --bg: #f8fafc;
-  --card: #ffffff;
-  --border: #e2e8f0;
-  --text: #0f172a;
-  --text-muted: #64748b;
-  --accent: #6366f1;
-  --accent-light: #e0e7ff;
-  --success: #22c55e;
-  --warning: #f59e0b;
-  --danger: #ef4444;
+@layer base {
+  :root {
+    --fg: #1d1d1f;
+    --fg-secondary: #6e6e73;
+    --fg-tertiary: #a1a1a6;
+    --bg: #fbfbfd;
+    --bg-secondary: #f5f5f7;
+    --bg-elevated: #ffffff;
+    --border: #e8e8ed;
+    --accent: #0071e3;
+    --accent-hover: #0077ed;
+    --success: #34c759;
+    --warning: #ff9f0a;
+    --danger: #ff3b30;
+    --radius: 16px;
+    --radius-sm: 12px;
+    --radius-xs: 8px;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+      "Helvetica Neue", Helvetica, Arial, sans-serif;
+    color: var(--fg);
+    background: var(--bg);
+    line-height: 1.47059;
+    letter-spacing: -0.022em;
+  }
+
+  ::selection {
+    background: rgba(0, 113, 227, 0.15);
+  }
 }
 
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center px-5 py-2.5 text-sm font-medium
+      rounded-full transition-all duration-200 ease-out;
+    background: var(--accent);
+    color: #fff;
+  }
+  .btn-primary:hover {
+    background: var(--accent-hover);
+    transform: scale(1.02);
+  }
+  .btn-primary:active {
+    transform: scale(0.98);
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center px-5 py-2.5 text-sm font-medium
+      rounded-full transition-all duration-200 ease-out;
+    color: var(--accent);
+    background: transparent;
+  }
+  .btn-secondary:hover {
+    background: rgba(0, 113, 227, 0.06);
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center px-4 py-2 text-sm font-medium
+      rounded-xl transition-all duration-200 ease-out;
+    color: var(--fg-secondary);
+  }
+  .btn-ghost:hover {
+    background: var(--bg-secondary);
+    color: var(--fg);
+  }
+
+  .input-field {
+    @apply w-full px-4 py-3 text-sm rounded-xl outline-none transition-all duration-200;
+    background: var(--bg-secondary);
+    border: 1.5px solid transparent;
+    color: var(--fg);
+  }
+  .input-field::placeholder {
+    color: var(--fg-tertiary);
+  }
+  .input-field:focus {
+    border-color: var(--accent);
+    background: var(--bg-elevated);
+    box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.1);
+  }
+
+  .card {
+    background: var(--bg-elevated);
+    border-radius: var(--radius);
+    padding: 2rem;
+  }
+
+  .section-title {
+    @apply text-3xl font-bold tracking-tight;
+    color: var(--fg);
+  }
+
+  .section-subtitle {
+    @apply text-base mt-1;
+    color: var(--fg-secondary);
+  }
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+/* Scrollbar */
+::-webkit-scrollbar { width: 0; height: 0; }
 
-/* Smooth transitions */
-* { transition-property: background-color, border-color, color, opacity;
-    transition-duration: 150ms; }
-
+/* Number input spinners */
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
   -webkit-appearance: none;

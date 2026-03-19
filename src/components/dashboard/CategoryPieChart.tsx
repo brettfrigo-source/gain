@@ -1,5 +1,5 @@
 "use client";
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 
 interface DataPoint {
   name: string;
@@ -16,29 +16,36 @@ export default function CategoryPieChart({ data }: { data: DataPoint[] }) {
             data={data}
             cx="50%"
             cy="50%"
-            innerRadius={50}
-            outerRadius={80}
-            paddingAngle={2}
+            innerRadius={60}
+            outerRadius={90}
+            paddingAngle={3}
             dataKey="value"
-            label={({ name, percent }) =>
-              `${name} ${(percent * 100).toFixed(0)}%`
-            }
-            labelLine={{ stroke: "#94a3b8" }}
+            stroke="none"
           >
             {data.map((entry, idx) => (
               <Cell key={idx} fill={entry.color} />
             ))}
           </Pie>
           <Tooltip
-            formatter={(value: number) => [`$${value.toLocaleString()}`, ""]}
+            formatter={(value: number, name: string) => [`$${value.toLocaleString()}`, name]}
             contentStyle={{
-              borderRadius: "8px",
-              border: "1px solid #e2e8f0",
+              borderRadius: "12px",
+              border: "none",
+              boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
               fontSize: "13px",
+              padding: "12px 16px",
             }}
           />
         </PieChart>
       </ResponsiveContainer>
+      <div className="flex flex-wrap gap-x-5 gap-y-1.5 justify-center mt-2">
+        {data.map((d) => (
+          <div key={d.name} className="flex items-center gap-1.5">
+            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: d.color }} />
+            <span className="text-xs" style={{ color: "var(--fg-secondary)" }}>{d.name}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

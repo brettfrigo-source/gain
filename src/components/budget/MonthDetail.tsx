@@ -26,172 +26,168 @@ export default function MonthDetail({ month }: Props) {
   const net = income - expenses;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-slate-900">
-          {MONTH_NAMES[month]} {budget.year}
+    <div className="space-y-12">
+      {/* Hero */}
+      <div>
+        <h1 className="section-title mb-2">{MONTH_NAMES[month]}</h1>
+        <div className="flex flex-wrap gap-8 mt-6">
+          {[
+            { label: "Income", value: income, color: "var(--success)" },
+            { label: "Expenses", value: expenses, color: "var(--danger)" },
+            { label: "Net", value: net, color: net >= 0 ? "var(--success)" : "var(--danger)" },
+          ].map((s) => (
+            <div key={s.label}>
+              <p className="text-xs mb-1" style={{ color: "var(--fg-tertiary)" }}>{s.label}</p>
+              <p className="text-2xl font-bold tracking-tight" style={{ color: s.color }}>
+                {calc.formatCurrency(s.value)}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Category progress */}
+      <section>
+        <h2 className="text-lg font-semibold tracking-tight mb-6" style={{ color: "var(--fg)" }}>
+          Category budgets
         </h2>
-        <div className="flex gap-2">
-          <button
-            onClick={() => { setEditIncome(null); setShowIncomeForm(true); }}
-            className="px-3 py-2 bg-emerald-500 text-white text-sm rounded-lg hover:bg-emerald-600"
-          >
-            + Income
-          </button>
-          <button
-            onClick={() => { setEditExpense(null); setShowExpenseForm(true); }}
-            className="px-3 py-2 bg-indigo-500 text-white text-sm rounded-lg hover:bg-indigo-600"
-          >
-            + Expense
-          </button>
-        </div>
-      </div>
-
-      {/* Summary */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="bg-emerald-50 rounded-xl p-4">
-          <p className="text-xs text-slate-500">Income</p>
-          <p className="text-xl font-bold text-emerald-600">{calc.formatCurrency(income)}</p>
-        </div>
-        <div className="bg-red-50 rounded-xl p-4">
-          <p className="text-xs text-slate-500">Expenses</p>
-          <p className="text-xl font-bold text-red-500">{calc.formatCurrency(expenses)}</p>
-        </div>
-        <div className={`${net >= 0 ? "bg-blue-50" : "bg-red-50"} rounded-xl p-4`}>
-          <p className="text-xs text-slate-500">Net</p>
-          <p className={`text-xl font-bold ${net >= 0 ? "text-blue-600" : "text-red-600"}`}>
-            {calc.formatCurrency(net)}
-          </p>
-        </div>
-      </div>
-
-      {/* Category budgets */}
-      <div className="bg-white rounded-xl border border-slate-200 p-5">
-        <h3 className="text-sm font-semibold text-slate-700 mb-3">Category Budgets</h3>
-        <div className="space-y-3">
+        <div className="space-y-5">
           {budget.categories.map((cat) => {
             const spent = calc.categorySpend(budget, cat.id, month);
+            const pct = cat.budgetedMonthly > 0 ? Math.round((spent / cat.budgetedMonthly) * 100) : 0;
             return (
               <div key={cat.id}>
-                <div className="flex items-center justify-between mb-1">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: cat.color }} />
-                    <span className="text-sm text-slate-700">{cat.name}</span>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: cat.color }} />
+                    <span className="text-sm font-medium" style={{ color: "var(--fg)" }}>{cat.name}</span>
                   </div>
-                  <span className="text-xs text-slate-500">
+                  <span className="text-xs tabular-nums" style={{ color: "var(--fg-tertiary)" }}>
                     {calc.formatCurrency(spent)} / {calc.formatCurrency(cat.budgetedMonthly)}
                   </span>
                 </div>
-                <ProgressBar value={spent} max={cat.budgetedMonthly} color={cat.color} showLabel={false} size="sm" />
+                <ProgressBar value={spent} max={cat.budgetedMonthly} color={cat.color} size="sm" />
               </div>
             );
           })}
         </div>
-      </div>
+      </section>
 
-      {/* Income list */}
-      <div className="bg-white rounded-xl border border-slate-200 p-5">
-        <h3 className="text-sm font-semibold text-slate-700 mb-3">Income</h3>
+      {/* Income */}
+      <section>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-lg font-semibold tracking-tight" style={{ color: "var(--fg)" }}>Income</h2>
+          <button
+            onClick={() => { setEditIncome(null); setShowIncomeForm(true); }}
+            className="btn-primary text-xs px-4 py-2"
+          >
+            Add income
+          </button>
+        </div>
         {monthData.incomes.length === 0 ? (
-          <p className="text-sm text-slate-400">No income entries yet</p>
+          <p className="text-sm" style={{ color: "var(--fg-tertiary)" }}>No income entries yet.</p>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-1">
             {monthData.incomes.map((inc) => (
-              <div key={inc.id} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
+              <div
+                key={inc.id}
+                className="flex items-center justify-between py-3.5 px-4 rounded-xl hover:bg-[var(--bg-secondary)] transition-colors duration-200 group"
+              >
                 <div>
-                  <p className="text-sm font-medium text-slate-800">{inc.source}</p>
-                  {inc.recurring && <span className="text-xs text-indigo-500">Recurring</span>}
+                  <p className="text-sm font-medium" style={{ color: "var(--fg)" }}>{inc.source}</p>
+                  {inc.recurring && (
+                    <p className="text-xs mt-0.5" style={{ color: "var(--fg-tertiary)" }}>Recurring</p>
+                  )}
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-sm font-semibold text-emerald-600">
+                <div className="flex items-center gap-4">
+                  <span className="text-sm font-semibold tabular-nums" style={{ color: "var(--success)" }}>
                     +{calc.formatCurrency(inc.amount)}
                   </span>
-                  <button
-                    onClick={() => { setEditIncome(inc); setShowIncomeForm(true); }}
-                    className="text-xs text-slate-400 hover:text-indigo-600"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => deleteIncome(month, inc.id)}
-                    className="text-xs text-slate-400 hover:text-red-600"
-                  >
-                    Delete
-                  </button>
+                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    <button
+                      onClick={() => { setEditIncome(inc); setShowIncomeForm(true); }}
+                      className="btn-ghost text-xs px-2 py-1"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => deleteIncome(month, inc.id)}
+                      className="btn-ghost text-xs px-2 py-1 hover:!text-[var(--danger)]"
+                    >
+                      Remove
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         )}
-      </div>
+      </section>
 
-      {/* Expense list */}
-      <div className="bg-white rounded-xl border border-slate-200 p-5">
-        <h3 className="text-sm font-semibold text-slate-700 mb-3">Expenses</h3>
+      {/* Expenses */}
+      <section>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-lg font-semibold tracking-tight" style={{ color: "var(--fg)" }}>Expenses</h2>
+          <button
+            onClick={() => { setEditExpense(null); setShowExpenseForm(true); }}
+            className="btn-primary text-xs px-4 py-2"
+          >
+            Add expense
+          </button>
+        </div>
         {monthData.expenses.length === 0 ? (
-          <p className="text-sm text-slate-400">No expenses yet</p>
+          <p className="text-sm" style={{ color: "var(--fg-tertiary)" }}>No expenses yet.</p>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-1">
             {monthData.expenses.map((exp) => (
-              <div key={exp.id} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
-                <div className="flex items-center gap-2">
+              <div
+                key={exp.id}
+                className="flex items-center justify-between py-3.5 px-4 rounded-xl hover:bg-[var(--bg-secondary)] transition-colors duration-200 group"
+              >
+                <div className="flex items-center gap-3">
                   <div
-                    className="w-3 h-3 rounded-full"
+                    className="w-2.5 h-2.5 rounded-full flex-shrink-0"
                     style={{ backgroundColor: calc.getCategoryColor(budget.categories, exp.categoryId) }}
                   />
                   <div>
-                    <p className="text-sm font-medium text-slate-800">{exp.description}</p>
-                    <p className="text-xs text-slate-400">
+                    <p className="text-sm font-medium" style={{ color: "var(--fg)" }}>{exp.description}</p>
+                    <p className="text-xs mt-0.5" style={{ color: "var(--fg-tertiary)" }}>
                       {calc.getCategoryName(budget.categories, exp.categoryId)}
-                      {exp.recurring && " • Recurring"}
+                      {exp.recurring && " · Recurring"}
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-sm font-semibold text-red-500">
+                <div className="flex items-center gap-4">
+                  <span className="text-sm font-semibold tabular-nums" style={{ color: "var(--danger)" }}>
                     -{calc.formatCurrency(exp.amount)}
                   </span>
-                  <button
-                    onClick={() => { setEditExpense(exp); setShowExpenseForm(true); }}
-                    className="text-xs text-slate-400 hover:text-indigo-600"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => deleteExpense(month, exp.id)}
-                    className="text-xs text-slate-400 hover:text-red-600"
-                  >
-                    Delete
-                  </button>
+                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    <button
+                      onClick={() => { setEditExpense(exp); setShowExpenseForm(true); }}
+                      className="btn-ghost text-xs px-2 py-1"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => deleteExpense(month, exp.id)}
+                      className="btn-ghost text-xs px-2 py-1 hover:!text-[var(--danger)]"
+                    >
+                      Remove
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         )}
-      </div>
+      </section>
 
       {/* Modals */}
-      <Modal
-        open={showIncomeForm}
-        onClose={() => setShowIncomeForm(false)}
-        title={editIncome ? "Edit Income" : "Add Income"}
-      >
-        <IncomeForm
-          month={month}
-          existing={editIncome}
-          onDone={() => setShowIncomeForm(false)}
-        />
+      <Modal open={showIncomeForm} onClose={() => setShowIncomeForm(false)} title={editIncome ? "Edit income" : "Add income"}>
+        <IncomeForm month={month} existing={editIncome} onDone={() => setShowIncomeForm(false)} />
       </Modal>
-      <Modal
-        open={showExpenseForm}
-        onClose={() => setShowExpenseForm(false)}
-        title={editExpense ? "Edit Expense" : "Add Expense"}
-      >
-        <ExpenseForm
-          month={month}
-          existing={editExpense}
-          onDone={() => setShowExpenseForm(false)}
-        />
+      <Modal open={showExpenseForm} onClose={() => setShowExpenseForm(false)} title={editExpense ? "Edit expense" : "Add expense"}>
+        <ExpenseForm month={month} existing={editExpense} onDone={() => setShowExpenseForm(false)} />
       </Modal>
     </div>
   );

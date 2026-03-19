@@ -13,20 +13,19 @@ export default function SavingsGoals() {
   const [showEfForm, setShowEfForm] = useState(false);
   const [editing, setEditing] = useState<SavingsGoal | null>(null);
 
-  // Goal form state
   const [gName, setGName] = useState("");
   const [gTarget, setGTarget] = useState("");
   const [gCurrent, setGCurrent] = useState("");
   const [gDeadline, setGDeadline] = useState("");
   const [gType, setGType] = useState<"short-term" | "long-term">("short-term");
 
-  // Emergency fund form state
   const [efTarget, setEfTarget] = useState(budget.emergencyFund.targetMonths.toString());
   const [efCurrent, setEfCurrent] = useState(budget.emergencyFund.currentAmount.toString());
   const [efMonthly, setEfMonthly] = useState(budget.emergencyFund.monthlyExpenseEstimate.toString());
 
   const ef = budget.emergencyFund;
   const efGoal = ef.targetMonths * ef.monthlyExpenseEstimate;
+  const efPct = efGoal > 0 ? Math.round((ef.currentAmount / efGoal) * 100) : 0;
 
   const openGoalForm = (goal?: SavingsGoal) => {
     if (goal) {
@@ -69,139 +68,131 @@ export default function SavingsGoals() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-16">
       {/* Emergency Fund */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
-        <div className="flex items-center justify-between mb-4">
+      <section>
+        <div className="flex items-end justify-between mb-8">
           <div>
-            <h2 className="text-lg font-semibold text-slate-900">Emergency Fund</h2>
-            <p className="text-sm text-slate-500">
-              {ef.targetMonths} months of expenses ({calc.formatCurrency(efGoal)})
+            <h1 className="section-title mb-2">Emergency fund</h1>
+            <p className="section-subtitle">
+              {ef.targetMonths} months of expenses · {calc.formatCurrency(efGoal)} target
             </p>
           </div>
-          <button
-            onClick={() => setShowEfForm(true)}
-            className="text-sm text-indigo-500 hover:text-indigo-700"
-          >
-            Edit
-          </button>
+          <button onClick={() => setShowEfForm(true)} className="btn-secondary">Edit</button>
         </div>
-        <ProgressBar value={ef.currentAmount} max={efGoal} color="#10b981" size="lg" />
-        <p className="text-sm text-slate-500 mt-2">
-          {efGoal > 0 ? ((ef.currentAmount / efGoal) * 100).toFixed(0) : 0}% funded
-          {ef.currentAmount < efGoal && (
-            <span> — {calc.formatCurrency(efGoal - ef.currentAmount)} to go</span>
-          )}
-        </p>
-      </div>
+        <div className="card">
+          <div className="flex items-end justify-between mb-4">
+            <p className="text-4xl font-bold tracking-tight" style={{ color: "var(--fg)" }}>
+              {efPct}%
+            </p>
+            <p className="text-sm" style={{ color: "var(--fg-tertiary)" }}>
+              {calc.formatCurrency(ef.currentAmount)} saved
+              {ef.currentAmount < efGoal && ` · ${calc.formatCurrency(efGoal - ef.currentAmount)} to go`}
+            </p>
+          </div>
+          <ProgressBar value={ef.currentAmount} max={efGoal} color="var(--success)" size="lg" />
+        </div>
+      </section>
 
       {/* Savings Goals */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-slate-900">Savings Goals</h2>
-        <button
-          onClick={() => openGoalForm()}
-          className="px-4 py-2 bg-indigo-500 text-white text-sm rounded-lg hover:bg-indigo-600"
-        >
-          + Add Goal
-        </button>
-      </div>
-
-      {budget.savingsGoals.length === 0 ? (
-        <div className="bg-white rounded-xl border border-slate-200 p-8 text-center">
-          <p className="text-slate-400 text-sm">No savings goals yet. Add one to start tracking!</p>
+      <section>
+        <div className="flex items-end justify-between mb-8">
+          <h2 className="section-title">Goals</h2>
+          <button onClick={() => openGoalForm()} className="btn-primary">Add goal</button>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {budget.savingsGoals.map((goal) => {
-            const pct = goal.targetAmount > 0 ? (goal.currentAmount / goal.targetAmount) * 100 : 0;
-            return (
-              <div key={goal.id} className="bg-white rounded-xl border border-slate-200 p-5">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <h3 className="text-sm font-semibold text-slate-900">{goal.name}</h3>
-                    <span className={`text-xs px-2 py-0.5 rounded ${
-                      goal.type === "short-term"
-                        ? "bg-blue-100 text-blue-700"
-                        : "bg-purple-100 text-purple-700"
-                    }`}>
-                      {goal.type === "short-term" ? "Short-term" : "Long-term"}
+
+        {budget.savingsGoals.length === 0 ? (
+          <div className="card text-center py-16">
+            <p style={{ color: "var(--fg-tertiary)" }}>No goals yet. Create one to start tracking.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {budget.savingsGoals.map((goal) => {
+              const pct = goal.targetAmount > 0 ? Math.round((goal.currentAmount / goal.targetAmount) * 100) : 0;
+              return (
+                <div key={goal.id} className="card group">
+                  <div className="flex items-start justify-between mb-6">
+                    <div>
+                      <h3 className="text-base font-semibold" style={{ color: "var(--fg)" }}>{goal.name}</h3>
+                      <p className="text-xs mt-1" style={{ color: "var(--fg-tertiary)" }}>
+                        {goal.type === "short-term" ? "Short-term" : "Long-term"}
+                        {goal.deadline && ` · Due ${new Date(goal.deadline).toLocaleDateString("en-US", { month: "short", year: "numeric" })}`}
+                      </p>
+                    </div>
+                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      <button onClick={() => openGoalForm(goal)} className="btn-ghost text-xs px-2 py-1">Edit</button>
+                      <button onClick={() => deleteSavingsGoal(goal.id)} className="btn-ghost text-xs px-2 py-1 hover:!text-[var(--danger)]">Remove</button>
+                    </div>
+                  </div>
+                  <div className="flex items-end justify-between mb-3">
+                    <span className="text-2xl font-bold tracking-tight" style={{ color: "var(--fg)" }}>{pct}%</span>
+                    <span className="text-xs tabular-nums" style={{ color: "var(--fg-tertiary)" }}>
+                      {calc.formatCurrency(goal.currentAmount)} / {calc.formatCurrency(goal.targetAmount)}
                     </span>
                   </div>
-                  <div className="flex gap-2">
-                    <button onClick={() => openGoalForm(goal)} className="text-xs text-indigo-500 hover:text-indigo-700">Edit</button>
-                    <button onClick={() => deleteSavingsGoal(goal.id)} className="text-xs text-red-400 hover:text-red-600">Delete</button>
-                  </div>
+                  <ProgressBar
+                    value={goal.currentAmount}
+                    max={goal.targetAmount}
+                    color={goal.type === "short-term" ? "var(--accent)" : "#af52de"}
+                    size="md"
+                  />
                 </div>
-                <ProgressBar
-                  value={goal.currentAmount}
-                  max={goal.targetAmount}
-                  color={goal.type === "short-term" ? "#3b82f6" : "#8b5cf6"}
-                  size="md"
-                />
-                <div className="flex justify-between mt-2 text-xs text-slate-500">
-                  <span>{pct.toFixed(0)}% complete</span>
-                  {goal.deadline && <span>Due: {new Date(goal.deadline).toLocaleDateString()}</span>}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
+              );
+            })}
+          </div>
+        )}
+      </section>
 
-      {/* Goal Form Modal */}
-      <Modal open={showGoalForm} onClose={() => setShowGoalForm(false)} title={editing ? "Edit Goal" : "Add Savings Goal"}>
-        <form onSubmit={handleGoalSubmit} className="space-y-4">
+      {/* Goal Form */}
+      <Modal open={showGoalForm} onClose={() => setShowGoalForm(false)} title={editing ? "Edit goal" : "New goal"}>
+        <form onSubmit={handleGoalSubmit} className="space-y-5">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Goal Name</label>
-            <input type="text" value={gName} onChange={(e) => setGName(e.target.value)} placeholder="e.g., Vacation fund" className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" autoFocus />
+            <label className="block text-xs font-medium mb-2" style={{ color: "var(--fg-secondary)" }}>Name</label>
+            <input type="text" value={gName} onChange={(e) => setGName(e.target.value)} placeholder="Vacation, car, etc." className="input-field" autoFocus />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Target Amount</label>
-              <input type="number" value={gTarget} onChange={(e) => setGTarget(e.target.value)} placeholder="10000" min="0" className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+              <label className="block text-xs font-medium mb-2" style={{ color: "var(--fg-secondary)" }}>Target</label>
+              <input type="number" value={gTarget} onChange={(e) => setGTarget(e.target.value)} placeholder="10000" min="0" className="input-field" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Current Amount</label>
-              <input type="number" value={gCurrent} onChange={(e) => setGCurrent(e.target.value)} placeholder="0" min="0" className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+              <label className="block text-xs font-medium mb-2" style={{ color: "var(--fg-secondary)" }}>Saved so far</label>
+              <input type="number" value={gCurrent} onChange={(e) => setGCurrent(e.target.value)} placeholder="0" min="0" className="input-field" />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Deadline</label>
-              <input type="date" value={gDeadline} onChange={(e) => setGDeadline(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+              <label className="block text-xs font-medium mb-2" style={{ color: "var(--fg-secondary)" }}>Deadline</label>
+              <input type="date" value={gDeadline} onChange={(e) => setGDeadline(e.target.value)} className="input-field" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Type</label>
-              <select value={gType} onChange={(e) => setGType(e.target.value as "short-term" | "long-term")} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
+              <label className="block text-xs font-medium mb-2" style={{ color: "var(--fg-secondary)" }}>Type</label>
+              <select value={gType} onChange={(e) => setGType(e.target.value as "short-term" | "long-term")} className="input-field">
                 <option value="short-term">Short-term</option>
                 <option value="long-term">Long-term</option>
               </select>
             </div>
           </div>
-          <button type="submit" className="w-full py-2 bg-indigo-500 text-white rounded-lg text-sm font-medium hover:bg-indigo-600">
-            {editing ? "Update" : "Add"} Goal
-          </button>
+          <button type="submit" className="btn-primary w-full mt-2">{editing ? "Save changes" : "Add goal"}</button>
         </form>
       </Modal>
 
-      {/* Emergency Fund Form Modal */}
-      <Modal open={showEfForm} onClose={() => setShowEfForm(false)} title="Edit Emergency Fund">
-        <form onSubmit={handleEfSubmit} className="space-y-4">
+      {/* Emergency Fund Form */}
+      <Modal open={showEfForm} onClose={() => setShowEfForm(false)} title="Emergency fund">
+        <form onSubmit={handleEfSubmit} className="space-y-5">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Target Months</label>
-            <input type="number" value={efTarget} onChange={(e) => setEfTarget(e.target.value)} min="1" max="24" className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+            <label className="block text-xs font-medium mb-2" style={{ color: "var(--fg-secondary)" }}>Target months</label>
+            <input type="number" value={efTarget} onChange={(e) => setEfTarget(e.target.value)} min="1" max="24" className="input-field" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Current Amount Saved</label>
-            <input type="number" value={efCurrent} onChange={(e) => setEfCurrent(e.target.value)} min="0" className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+            <label className="block text-xs font-medium mb-2" style={{ color: "var(--fg-secondary)" }}>Amount saved</label>
+            <input type="number" value={efCurrent} onChange={(e) => setEfCurrent(e.target.value)} min="0" className="input-field" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Monthly Expense Estimate</label>
-            <input type="number" value={efMonthly} onChange={(e) => setEfMonthly(e.target.value)} min="0" className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+            <label className="block text-xs font-medium mb-2" style={{ color: "var(--fg-secondary)" }}>Monthly expenses estimate</label>
+            <input type="number" value={efMonthly} onChange={(e) => setEfMonthly(e.target.value)} min="0" className="input-field" />
           </div>
-          <button type="submit" className="w-full py-2 bg-emerald-500 text-white rounded-lg text-sm font-medium hover:bg-emerald-600">
-            Update Emergency Fund
-          </button>
+          <button type="submit" className="btn-primary w-full mt-2">Save changes</button>
         </form>
       </Modal>
     </div>

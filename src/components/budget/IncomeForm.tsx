@@ -19,7 +19,6 @@ export default function IncomeForm({ month, existing, onDone }: Props) {
     e.preventDefault();
     const amt = parseFloat(amount);
     if (!source.trim() || isNaN(amt) || amt <= 0) return;
-
     if (existing) {
       updateIncome(month, { ...existing, source: source.trim(), amount: amt, recurring });
     } else {
@@ -29,44 +28,41 @@ export default function IncomeForm({ month, existing, onDone }: Props) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-5">
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">Source</label>
+        <label className="block text-xs font-medium mb-2" style={{ color: "var(--fg-secondary)" }}>Source</label>
         <input
           type="text"
           value={source}
           onChange={(e) => setSource(e.target.value)}
-          placeholder="e.g., Salary, Freelance"
-          className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+          placeholder="Salary, freelance, etc."
+          className="input-field"
           autoFocus
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">Amount</label>
+        <label className="block text-xs font-medium mb-2" style={{ color: "var(--fg-secondary)" }}>Amount</label>
         <input
           type="number"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
-          placeholder="0.00"
+          placeholder="0"
           step="0.01"
           min="0"
-          className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+          className="input-field"
         />
       </div>
-      <label className="flex items-center gap-2 text-sm text-slate-700">
+      <label className="flex items-center gap-2.5 cursor-pointer">
         <input
           type="checkbox"
           checked={recurring}
           onChange={(e) => setRecurring(e.target.checked)}
-          className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+          className="w-4 h-4 rounded border-[var(--border)] text-[var(--accent)] focus:ring-[var(--accent)] focus:ring-offset-0"
         />
-        Recurring monthly
+        <span className="text-sm" style={{ color: "var(--fg-secondary)" }}>Recurring monthly</span>
       </label>
-      <button
-        type="submit"
-        className="w-full py-2 bg-indigo-500 text-white rounded-lg text-sm font-medium hover:bg-indigo-600"
-      >
-        {existing ? "Update" : "Add"} Income
+      <button type="submit" className="btn-primary w-full mt-2">
+        {existing ? "Save changes" : "Add income"}
       </button>
     </form>
   );
