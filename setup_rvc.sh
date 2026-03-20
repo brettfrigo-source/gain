@@ -50,7 +50,15 @@ detect_gpu() {
 
 # ---- Check Python ----
 check_python() {
-    if command -v python3 &>/dev/null; then
+    # Prefer Python 3.10 or 3.11 for best RVC compatibility
+    # Python 3.13+ has issues with many ML packages
+    if command -v python3.11 &>/dev/null; then
+        PYTHON=python3.11
+    elif command -v python3.10 &>/dev/null; then
+        PYTHON=python3.10
+    elif command -v python3.12 &>/dev/null; then
+        PYTHON=python3.12
+    elif command -v python3 &>/dev/null; then
         PYTHON=python3
     elif command -v python &>/dev/null; then
         PYTHON=python
@@ -65,6 +73,12 @@ check_python() {
     if [[ "$PY_MAJOR" -lt 3 ]] || [[ "$PY_MAJOR" -eq 3 && "$PY_MINOR" -lt 8 ]]; then
         error "Python 3.8+ required, found $PY_VER"
     fi
+
+    if [[ "$PY_MINOR" -ge 13 ]]; then
+        warn "Python ${PY_VER} detected. RVC works best with Python 3.10-3.11."
+        warn "If you hit errors, install Python 3.11: brew install python@3.11"
+    fi
+
     info "Python ${PY_VER} found ($PYTHON)"
 }
 
@@ -224,16 +238,14 @@ download_models() {
     fi
 }
 
-# ---- Create convenience launcher ----
-create_launcher() {
-    cat > "${SCRIPT_DIR}/start_rvc.sh" << 'LAUNCHER'
-#!/usr/bin/env bash
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "${SCRIPT_DIR}/Retrieval-based-Voice-Conversion-WebUI"
-python3 infer-web.py
-LAUNCHER
-    chmod +x "${SCRIPT_DIR}/start_rvc.sh"
-    info "Created start_rvc.sh launcher script."
+# ---- Verify launcher exists ----
+check_launcher() {
+    if [[ -x "${SCRIPT_DIR}/start_rvc.sh" ]]; then
+        info "start_rvc.sh launcher found."
+    else
+        warn "start_rvc.sh not found. You can launch RVC manually with:"
+        warn "  cd ${RVC_DIR} && python3 infer-web.py"
+    fi
 }
 
 # ---- Verify installation ----
@@ -271,7 +283,7 @@ main() {
     install_pytorch
     install_deps
     download_models
-    create_launcher
+    check_launcher
     verify_install
 
     echo ""
