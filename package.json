@@ -1,0 +1,12 @@
+{
+  "name": "grain",
+  "version": "2.0.0",
+  "description": "GRAIN — a browser-based granular synthesizer. Open index.html; no build required.",
+  "scripts": {
+    "test": "node test/qa.cjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.56.0"
+  },
+  "license": "MIT"
+}
